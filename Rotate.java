@@ -1,8 +1,9 @@
+import lejos.nxt.LCD;
 import lejos.robotics.subsumption.Behavior;
 
 public class Rotate implements Behavior{
 	//true orientation
-	private int isFacing = 0;
+	private int isFacing = 1;
 	//stage procedure is at
 	private int stage = 0;
 	
@@ -32,6 +33,10 @@ public class Rotate implements Behavior{
 				isFacing +=1;
 			}
 			stage = 0;
+			
+			LCD.clear(2);
+			LCD.drawString("face:" + isFacing, 0, 2);
+			
 			break;
 		}
 	}

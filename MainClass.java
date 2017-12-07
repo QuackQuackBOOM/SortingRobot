@@ -1,11 +1,20 @@
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import lejos.nxt.Button;
 import lejos.nxt.LCD;
 import lejos.nxt.LightSensor;
 import lejos.nxt.Motor;
 import lejos.nxt.SensorPort;
+import lejos.nxt.comm.BTConnection;
+import lejos.nxt.comm.Bluetooth;
+import lejos.nxt.comm.NXTConnection;
 import lejos.robotics.navigation.DifferentialPilot;
 import lejos.robotics.subsumption.Arbitrator;
 import lejos.robotics.subsumption.Behavior;
+
+//TO DO
+////Modify MovQUEUE so update LCD when modified
+////Set initial Condition of Claw
 
 public class MainClass {
 	public static final int NUM_OF_SORTS = 1;
@@ -28,8 +37,8 @@ public class MainClass {
 	private static int currentPos = -1;
 	//Position to go to (NextPos behaviour moves to this position)
 	private static int nextPos = -1;
-	//Direction robot is facing (0 = facing positive, 1 = facing objects, 2 = facing negative)
-	public static int facing = 0;
+	//Direction robot is facing (1 = facing positive, 2 = facing objects, 3 = facing negative)
+	public static int facing = 1;
 	
 	//Is claw open
 	public static boolean isClawOpen = true;
@@ -43,7 +52,16 @@ public class MainClass {
 	public static MovQueue movementQueue = new MovQueue();
 	
 	//Hard coded values to be sorted
-	public static int[] Values = {3,2,1};
+	public static int[] values = {-1,-1,-1};
+	public static boolean valuesHasEmpty = true;
+	
+	public static BTConnection connection = null;
+	public static DataInputStream dis;
+	public static DataOutputStream dos;
+	public static byte[] buffer;
+	public static int MAX_READ = 30;
+	public static int cValue = -1;
+	public static int lastValue = -1;
 	
 	public static void main(String[] args) {
 		//Calabrate Light Sensor
@@ -56,6 +74,11 @@ public class MainClass {
 		pilot.setRotateSpeed(250);
 		pilot.setTravelSpeed(50);
 		Motor.C.setSpeed(50);
+		
+		buffer = new byte[MAX_READ];
+		LCD.drawString("Waiting  ", 0, 0);
+		MainClass.connection = Bluetooth.waitForConnection(0,  NXTConnection.RAW);
+		LCD.clear();
 		
 		//##change claw to start pos
 		
@@ -73,10 +96,12 @@ public class MainClass {
 				new Reset(),
 				//working the claw
 				new Claw(),
+				new BTfillValues(),
 				//moving along line
 				new NextPos(),
 				//rotating robot
-				new Rotate()
+				new Rotate(),
+				new BTconnect()
 		};
 		Arbitrator arb = new Arbitrator(ba);
 		
@@ -112,13 +137,13 @@ public class MainClass {
 	
 	/////TEMP - instead of sensing values
 	public static int getValue() {
-		return Values[currentPos];
+		return values[currentPos];
 	}
 	/////TEMP - instead of sensing values - while sorting
 	public static void switchValues(int index1, int index2) {
-		int temp = Values[index1];
-		Values[index1] = Values[index2];
-		Values[index2] = temp;
+		int temp = values[index1];
+		values[index1] = values[index2];
+		values[index2] = temp;
 	}
 	
 	//setters and getters are so LCD can be updated

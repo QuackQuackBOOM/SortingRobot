@@ -1,3 +1,4 @@
+import lejos.nxt.LCD;
 import lejos.robotics.subsumption.Behavior;
 
 public class MoveBlocks implements Behavior {	
@@ -23,6 +24,8 @@ public class MoveBlocks implements Behavior {
 				MainClass.openClaw = true;
 				//movement is complete so remove from movementQueue
 				MainClass.movementQueue.removeNode();
+				LCD.clear(3);
+				LCD.drawString("Qlen:" + MainClass.movementQueue.length, 0, 3);
 			}
 		}
 	}
